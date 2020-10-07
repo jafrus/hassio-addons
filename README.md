@@ -14,5 +14,33 @@ would like to open ports on other interfaces than localhost.
 listen on all interfaces, `0.0.0.0`. `GatewayPorts clientspecified`
 is preferable.
 
+## Apache config
+### Modules
+```
+  a2enmod proxy_wstunnel
+  a2enmod proxy
+  a2enmod proxy_http
+  a2enmod proxy_balancer
+  a2enmod lbmethod_byrequests
+```
+### *.conf
+```
+  ServerAdmin webmaster@localhost
+  ServerName hassio.example.com
+
+  ProxyPreserveHost On
+  ProxyRequests Off
+  ProxyPass / http://127.0.01:8123
+  ProxyPassReverse / http://127.0.0.1:44400
+  ProxyPass /api/websocket ws://127.0.0.1:44400/api/websocket
+  ProxyPassReverse /api/websocket ws://127.0.0.1:44400/api/websocket
+
+  RewriteEngine on
+  RewriteCond %{HTTP:Upgrade} =websocket [NC]
+  RewriteRule /(.*)  ws://127.0.0.1:44400/$1 [P,l]
+  RewriteCond %{HTTP:Upgrade} !=websocket [NC]
+  RewriteRule /(.*)  http://127.0.0.1:44400/$1 [P,l]
+```
+
 ### Licence
 MIT (c) Odin Ugedal
